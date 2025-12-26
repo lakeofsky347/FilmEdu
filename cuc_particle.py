@@ -17,66 +17,63 @@ def cuc_particle_effect():
             const canvas = document.getElementById('canvas1');
             const ctx = canvas.getContext('2d');
             
+            // 适配 Streamlit 容器宽度，高度增加以容纳更多内容
             canvas.width = window.innerWidth;
             canvas.height = 600; 
 
             let particleArray = [];
-            let appState = 0; // 0:游弋, 1:CUC, 2:CUC+DSIM
+            let currentText = "CUC"; // 当前状态
             
             // 鼠标配置
-            const mouse = { x: null, y: null, radius: 100 };
+            const mouse = { x: null, y: null, radius: 30 }; // 斥力范围稍微调大一点点以配合大字体
 
             window.addEventListener('mousemove', function(event){
                 mouse.x = event.x;
                 mouse.y = event.y;
             });
-            // 鼠标移出时，给一个默认位置（右侧中心），让鱼群不至于停滞
             window.addEventListener('mouseout', function(){
-                mouse.x = canvas.width * 0.8;
-                mouse.y = canvas.height * 0.5;
+                mouse.x = undefined;
+                mouse.y = undefined;
             });
 
-            // 双击切换
+            // 双击切换状态
             window.addEventListener('dblclick', function(){
-                if (appState === 0) {
-                    appState = 1;
-                    init("CUC", "");
-                } else if (appState === 1) {
-                    appState = 2;
-                    init("CUC", "DSIM");
+                if (currentText === "CUC") {
+                    currentText = "DSIM";
+                    // 重新扫描并重新分配目标点
+                    init("CUC", "DSIM"); 
                 } else {
-                    appState = 1;
+                    currentText = "CUC";
                     init("CUC", "");
                 }
             });
 
             class Particle {
                 constructor(x, y){
-                    // 初始位置限制在右侧海域
-                    this.x = Math.random() * (canvas.width * 0.5) + (canvas.width * 0.5);
+                    this.x = Math.random() * canvas.width; // 初始随机位置，产生聚拢效果
                     this.y = Math.random() * canvas.height;
+                    this.size = 2.2; // 粒子稍大，更有质感
                     
-                    // 物理属性
-                    this.vx = (Math.random() - 0.5) * 2;
-                    this.vy = (Math.random() - 0.5) * 2;
-                    this.friction = 0.9; // 游弋时的低阻力
-                    
-                    // 目标点
+                    // 目标位置 (Target Position)
                     this.targetX = x;
                     this.targetY = y;
                     
-                    // 外观：松散的大点
-                    this.size = Math.random() * 2 + 1.5; 
-                    this.baseHue = Math.random() * 30 + 170; // 青色系
+                    this.density = (Math.random() * 20) + 1; 
                     
-                    // 随机参数
+                    // 核心颜色：青色区间 (170-190)
+                    this.baseHue = Math.random() * 20 + 170;
+                    
+                    // 微动参数 (Swarm Noise)
                     this.angle = Math.random() * Math.PI * 2;
+                    this.velocity = Math.random() * 0.5 + 0.2;
                 }
                 
                 draw(){
-                    // 呼吸闪烁
-                    const opacity = 0.4 + Math.sin(Date.now()*0.002 + this.x) * 0.4;
+                    // 呼吸变色
+                    const time = Date.now() * 0.001;
+                    const opacity = 0.6 + Math.sin(time + this.density) * 0.4;
                     ctx.fillStyle = `hsla(${this.baseHue}, 80%, 60%, ${opacity})`;
+                    
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                     ctx.closePath();
@@ -84,118 +81,79 @@ def cuc_particle_effect():
                 }
                 
                 update(){
-                    // ==========================================
-                    // 🌊 状态 0: 鱼群集结 (Attraction Mode)
-                    // ==========================================
-                    if (appState === 0) {
-                        // 1. 寻找目标：鼠标位置 或 默认右侧中心
-                        let targetX = mouse.x || canvas.width * 0.8;
-                        let targetY = mouse.y || canvas.height * 0.5;
-                        
-                        let dx = targetX - this.x;
-                        let dy = targetY - this.y;
-                        let distance = Math.sqrt(dx*dx + dy*dy);
-                        
-                        // 2. 引力计算 (距离越远引力越大，但有上限)
-                        // 这是一个柔和的牵引力
-                        let forceX = dx * 0.002; 
-                        let forceY = dy * 0.002;
-                        
-                        // 3. 随机游动噪音 (Perlin Noise模拟)
-                        this.angle += 0.05;
-                        let noiseX = Math.cos(this.angle) * 0.2;
-                        let noiseY = Math.sin(this.angle) * 0.2;
-
-                        this.vx += forceX + noiseX;
-                        this.vy += forceY + noiseY;
-                        
-                        // 4. 速度限制 (防止飞太快)
-                        this.vx *= 0.95; // 水阻力
-                        this.vy *= 0.95;
-                        
-                        this.x += this.vx;
-                        this.y += this.vy;
-                        return;
-                    }
-
-                    // ==========================================
-                    // 🧊 状态 1 & 2: 文字结晶 (Repulsion + Viscosity)
-                    // ==========================================
-                    
-                    // 1. 鼠标排斥 (此时鼠标是干扰源)
+                    // 1. 计算鼠标斥力
                     let dx = mouse.x - this.x;
                     let dy = mouse.y - this.y;
                     let distance = Math.sqrt(dx * dx + dy * dy);
-                    let repulseRadius = 60; // 较小的排斥范围
+                    let forceDirectionX = dx / distance;
+                    let forceDirectionY = dy / distance;
                     
-                    if (distance < repulseRadius){
-                        const forceDirectionX = dx / distance;
-                        const forceDirectionY = dy / distance;
-                        const force = (repulseRadius - distance) / repulseRadius;
-                        
-                        // 强推力
-                        this.vx -= forceDirectionX * force * 2; 
-                        this.vy -= forceDirectionY * force * 2;
+                    let maxDistance = mouse.radius;
+                    let force = (maxDistance - distance) / maxDistance;
+                    let directionX = forceDirectionX * force * this.density;
+                    let directionY = forceDirectionY * force * this.density;
+
+                    // 2. 计算回归目标的力 (Home Force)
+                    // 引入微动：目标点不是固定的，是在原定目标点周围做微小的圆周运动
+                    this.angle += 0.02; // 角速度
+                    let swarmX = this.targetX + Math.cos(this.angle + this.density) * 3; // 3px 的微动范围
+                    let swarmY = this.targetY + Math.sin(this.angle + this.density) * 3;
+
+                    let homeDx = this.x - swarmX;
+                    let homeDy = this.y - swarmY;
+
+                    if (distance < mouse.radius){
+                        // 受到斥力：推开
+                        this.x -= directionX * 2; 
+                        this.y -= directionY * 2;
+                    } else {
+                        // 3. 高粘滞流体模拟 (Fluid Simulation)
+                        // 不直接设置位置，而是通过极小的比例逼近目标 (Zeno's Paradox)
+                        // 分母越大，液体越稠，运动越迟滞优雅
+                        if (this.x !== swarmX){
+                            this.x -= homeDx / 35; // 阻尼系数 35，非常粘稠
+                        }
+                        if (this.y !== swarmY){
+                            this.y -= homeDy / 35;
+                        }
                     }
-
-                    // 2. 回归目标的弹力 (Spring Force)
-                    // 引入微动：目标点本身在轻微浮动，增加液体感
-                    let floatX = Math.cos(Date.now() * 0.001 + this.y * 0.05) * 2;
-                    let floatY = Math.sin(Date.now() * 0.001 + this.x * 0.05) * 2;
-                    
-                    let homeDx = (this.targetX + floatX) - this.x;
-                    let homeDy = (this.targetY + floatY) - this.y;
-                    
-                    // 强回弹，高记忆感
-                    this.vx += homeDx * 0.05;
-                    this.vy += homeDy * 0.05;
-
-                    // 3. 高粘滞阻尼 (High Viscosity)
-                    // 0.8 的摩擦力让运动非常迟滞，像在胶水中
-                    this.vx *= 0.80; 
-                    this.vy *= 0.80;
-
-                    this.x += this.vx;
-                    this.y += this.vy;
                 }
                 
+                // 更新目标点 (用于变形)
                 changeTarget(x, y) {
                     this.targetX = x;
                     this.targetY = y;
                 }
             }
 
+            // 核心逻辑：获取文字坐标数据
             function scanText(text1, text2) {
                 ctx.clearRect(0,0, canvas.width, canvas.height);
+                
                 ctx.fillStyle = 'white';
-                // 字体稍微减小一点点，留出呼吸空间
-                ctx.font = '900 200px Verdana'; 
+                ctx.font = '900 220px Verdana'; // 巨型字体
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
-                // 绘制文字
+                // 绘制第一行 CUC
                 ctx.fillText('CUC', canvas.width/2, canvas.height/2 - (text2 ? 80 : 0));
+                
+                // 如果有第二行 DSIM
                 if (text2) {
-                    ctx.font = '900 100px Verdana';
-                    ctx.fillText('DSIM', canvas.width/2, canvas.height/2 + 110);
+                    ctx.font = '900 120px Verdana';
+                    ctx.fillText('DSIM', canvas.width/2, canvas.height/2 + 100);
                 }
                 
                 const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                ctx.clearRect(0,0, canvas.width, canvas.height); 
+                ctx.clearRect(0,0, canvas.width, canvas.height); // 扫完清空，留给粒子画
                 
                 let coordinates = [];
-                // 🔵 关键修改：采样间距 Gap
-                // Gap = 6~7 可以实现“松散的点”效果，不必完全填充
-                // 既能看清字，又有空隙感
-                const gap = 7; 
+                const gap = 4; // 采样密度
                 
                 for (let y = 0; y < canvas.height; y += gap){
                     for (let x = 0; x < canvas.width; x += gap){
-                        // 阈值 128
                         if (data.data[(y * 4 * canvas.width) + (x * 4) + 3] > 128){
-                            // 加入一点随机偏移，让文字边缘不那么死板
-                            let jitter = (Math.random() - 0.5) * 2;
-                            coordinates.push({x: x + jitter, y: y + jitter});
+                            coordinates.push({x: x, y: y});
                         }
                     }
                 }
@@ -205,33 +163,36 @@ def cuc_particle_effect():
             function init(text1, text2){
                 const coords = scanText(text1, text2);
                 
-                // 初始状态粒子数：控制在 1000 左右，保持稀疏感
-                if (particleArray.length < 800) {
-                     for (let i = particleArray.length; i < 800; i++){
-                        particleArray.push(new Particle(Math.random()*canvas.width, Math.random()*canvas.height));
+                // 智能分配策略：
+                // 如果现有粒子不够，创建新的；如果多了，删除多余的（或者隐藏）
+                // 这里为了变形平滑，我们尽量复用现有粒子
+                
+                if (particleArray.length === 0) {
+                    // 第一次初始化
+                    for (let i = 0; i < coords.length; i++){
+                        particleArray.push(new Particle(coords[i].x, coords[i].y));
                     }
-                }
-
-                let i = 0;
-                // 分配目标
-                for (; i < coords.length && i < particleArray.length; i++) {
-                    particleArray[i].changeTarget(coords[i].x, coords[i].y);
-                }
-                
-                // 多余粒子处理：让它们在文字周围继续像鱼一样游动，而不是消失
-                // 这能增加氛围感
-                for (; i < particleArray.length; i++) {
-                    // 目标设为随机位置
-                    particleArray[i].changeTarget(
-                        Math.random() * canvas.width, 
-                        Math.random() * canvas.height
-                    );
-                }
-                
-                // 如果文字需要的粒子比当前多，补充粒子
-                if (coords.length > particleArray.length) {
-                    for (let j = particleArray.length; j < coords.length; j++) {
-                        particleArray.push(new Particle(coords[j].x, coords[j].y));
+                } else {
+                    // 变形逻辑 (Morphing)
+                    // 1. 调整现有粒子目标
+                    let i = 0;
+                    for (; i < coords.length && i < particleArray.length; i++) {
+                        particleArray[i].changeTarget(coords[i].x, coords[i].y);
+                    }
+                    
+                    // 2. 如果新文字粒子更多，补充粒子
+                    if (coords.length > particleArray.length) {
+                        for (; i < coords.length; i++) {
+                            particleArray.push(new Particle(coords[i].x, coords[i].y));
+                        }
+                    } 
+                    // 3. 如果新文字粒子更少，多余的粒子让它飞走或透明 (这里简化为飞出屏幕)
+                    else if (coords.length < particleArray.length) {
+                        for (; i < particleArray.length; i++) {
+                            particleArray[i].changeTarget(Math.random() * canvas.width, Math.random() * canvas.height); // 散开
+                        }
+                        // 截断数组以优化性能
+                        particleArray.splice(coords.length);
                     }
                 }
             }
@@ -245,18 +206,20 @@ def cuc_particle_effect():
                 requestAnimationFrame(animate);
             }
 
-            // 启动：先生成一批“游鱼”
-            for(let i=0; i<800; i++){
-                particleArray.push(new Particle(0,0));
-            }
+            // 启动
+            init("CUC", ""); 
             animate();
             
             window.addEventListener('resize', function(){
                 canvas.width = window.innerWidth;
                 canvas.height = 600;
+                // 重置当前状态
+                if(currentText === "CUC") init("CUC", "");
+                else init("CUC", "DSIM");
             });
         </script>
     </body>
     </html>
     """
+    # 增加高度以适应双行文字
     components.html(html_code, height=600, scrolling=False)
