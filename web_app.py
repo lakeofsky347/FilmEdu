@@ -19,8 +19,7 @@ from qwenclient import generate_image_sync
 # 🛠️ 基础工具与配置
 # ==========================================
 UPLOAD_DIR = "student_uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def save_uploaded_file(uploaded_file, user_id, task_id):
     if uploaded_file is None: return None
@@ -293,7 +292,7 @@ def landing_page():
     <!-- 1. 陈虹宇 -->
     <div class="team-card">
         <div class="avatar-box">
-                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu-OS@main/heads/chen.jpg" class="avatar-img">
+                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu@main/heads/chen.jpg" class="avatar-img">
             </div>
         <div class="team-name">陈虹宇</div>
         <div class="team-role">Lead Architect & UI Designer</div>
@@ -303,7 +302,7 @@ def landing_page():
 <!-- 2. 纪坤江 -->
     <div class="team-card">
         <div class="avatar-box">
-                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu-OS@main/heads/ji.jpg" class="avatar-img">
+                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu@main/heads/ji.jpg" class="avatar-img">
             </div>
         <div class="team-name">纪坤江</div>
         <div class="team-role">Backend Developer</div>
@@ -313,7 +312,7 @@ def landing_page():
 <!-- 3. 马行键 -->
     <div class="team-card">
         <div class="avatar-box">
-                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu-OS@main/heads/ma.jpg" class="avatar-img">
+                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu@main/heads/ma.jpg" class="avatar-img">
             </div>
         <div class="team-name">马行键</div>
         <div class="team-role">QA Engineer</div>
@@ -323,7 +322,7 @@ def landing_page():
 <!-- 4. 唐艺玲 (暖色调区分) -->
     <div class="team-card">
         <div class="avatar-box">
-                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu-OS@main/heads/tang.jpg" class="avatar-img">
+                <img src="https://cdn.jsdelivr.net/gh/lakeofsky347/FilmEdu@main/heads/tang.jpg" class="avatar-img">
             </div>
         <div class="team-name">唐艺玲</div>
         <div class="team-role">Technical Writer</div>
