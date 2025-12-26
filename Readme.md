@@ -50,22 +50,14 @@ HTTP 请求: requests
 确保你的电脑已安装 Python 3.8 或更高版本。
 2. 克隆与安装
 下载并解压项目，然后在项目根目录打开终端，运行：
-code
-Bash
-# 安装所有依赖
 pip install -r requirements.txt
 3. 配置 API Key
 打开 config.py 文件，填入你自己的 API Key：
-code
-Python
-# config.py
 QWEN_API_KEY = "sk-你的阿里云Key" 
 DEEPSEEK_API_KEY = "sk-你的DeepSeek Key"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 4. 运行系统
 在终端中执行以下命令：
-code
-Bash
 streamlit run web_app.py
 程序启动后，你的浏览器将自动打开 http://localhost:8501 地址。
 5. 清空测试数据
@@ -79,4 +71,5 @@ streamlit run web_app.py
 马行键	202413093062	功能集成测试及反馈
 唐艺玲	202308043016	项目报告及书面整理
 李祈芸	202413093059	材料整理及进度推进
+
 
