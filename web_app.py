@@ -87,105 +87,150 @@ def inject_custom_css():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
         
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0e1117; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
-
-        .stApp { font-family: 'Noto Sans SC', sans-serif; }
+        /* === 全局基础设置 === */
+        .stApp { font-family: 'Noto Sans SC', sans-serif; transition: background-color 0.5s ease; }
         
-        h1, h2, h3 {
-            font-family: 'Orbitron', sans-serif !important;
-            background: linear-gradient(120deg, #E0F7FA, #00f2ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { border-radius: 4px; }
+
+        /* =========================================
+           🌙 DARK MODE (默认 / 赛博朋克)
+           ========================================= */
+        @media (prefers-color-scheme: dark) {
+            .stApp {
+                background-color: #0e1117;
+            }
+            h1, h2, h3 {
+                font-family: 'Orbitron', sans-serif !important;
+                background: linear-gradient(120deg, #E0F7FA, #00f2ff);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
+            }
+            .team-card, div[data-testid="stMetric"], .glass-card, div.stForm {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            }
+            .team-card:hover {
+                border-color: #00f2ff;
+                background: rgba(0, 242, 255, 0.05);
+                box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            }
+            .system-bar { color: rgba(0, 242, 255, 0.8); }
+            ::-webkit-scrollbar-track { background: #0e1117; }
+            ::-webkit-scrollbar-thumb { background: #333; }
+            ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
+            
+            /* 粒子背景 (暗色) */
+            #particles-js { opacity: 1; }
         }
 
-        div[data-testid="stMetric"], .glass-card, div.stForm {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        div[data-testid="stMetric"]:hover, .glass-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(0, 242, 255, 0.5);
-            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.15);
+        /* =========================================
+           ☀️ LIGHT MODE (工业设计 / 极简)
+           ========================================= */
+        @media (prefers-color-scheme: light) {
+            .stApp {
+                background-color: #f0f2f6; /* 工业浅灰 */
+            }
+            
+            /* 标题：深邃的工业蓝 */
+            h1, h2, h3 {
+                font-family: 'Orbitron', sans-serif !important;
+                background: linear-gradient(120deg, #004e92, #000428);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                filter: none; /* 去除发光，保持锐利 */
+            }
+            
+            /* 卡片：纯白实体 + 投影 */
+            .team-card, div[data-testid="stMetric"], .glass-card, div.stForm {
+                background: #ffffff;
+                border: 1px solid #e0e0e0;
+                border-radius: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* 柔和阴影 */
+                color: #31333F;
+            }
+            
+            .team-card:hover {
+                transform: translateY(-8px);
+                border-color: #0056d2;
+                box-shadow: 0 12px 24px rgba(0, 86, 210, 0.15); /* 蓝色投影 */
+            }
+            
+            /* 团队卡片文字适配 */
+            .team-name { color: #1f1f1f !important; }
+            .team-role { color: #0056d2 !important; font-weight: 700; }
+            .team-id { color: #666 !important; }
+            .team-desc { color: #555 !important; }
+            
+            /* 头像框 */
+            .avatar-box {
+                border: 3px solid #f0f2f6; /* 与背景同色 */
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+            
+            /* 系统栏 */
+            .system-bar { 
+                color: #0056d2; 
+                background: rgba(255,255,255,0.8);
+                backdrop-filter: blur(5px);
+                border-bottom-left-radius: 10px;
+            }
+            
+            /* 滚动条 */
+            ::-webkit-scrollbar-track { background: #f0f2f6; }
+            ::-webkit-scrollbar-thumb { background: #ccc; }
+            ::-webkit-scrollbar-thumb:hover { background: #0056d2; }
+            
+            /* 隐藏原来的暗色粒子背景，JS会画新的 */
+            #bg-gradient { display: none; }
         }
 
+        /* --- 通用布局 --- */
         .system-bar {
             position: fixed; top: 0; right: 0; padding: 10px 20px;
-            color: rgba(0, 242, 255, 0.8); font-family: 'Orbitron'; font-size: 0.75rem;
-            z-index: 9999; letter-spacing: 1px;
+            font-family: 'Orbitron'; font-size: 0.75rem; z-index: 9999; letter-spacing: 1px;
         }
         
-        /* --- 动画类 --- */
+        .team-container {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
+            padding: 40px 20px; max-width: 1200px; margin: 0 auto;
+        }
+        @media (max-width: 900px) { .team-container { grid-template-columns: 1fr; } }
+
+        .team-card {
+            width: 100%; height: 360px;
+            position: relative; transition: all 0.4s ease;
+            text-align: center; display: flex; flex-direction: column; align-items: center;
+        }
+
+        .avatar-box {
+            width: 100px; height: 100px; border-radius: 50%;
+            margin: 40px auto 20px;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white; font-family: 'Noto Sans SC', sans-serif;
+            font-size: 45px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.4s ease;
+        }
+        
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .team-name { font-family: 'Orbitron', 'Noto Sans SC'; font-size: 1.4rem; margin-bottom: 5px; font-weight: bold; }
+        .team-role { font-size: 0.85rem; margin-bottom: 10px; letter-spacing: 1px; }
+        .team-id { font-size: 0.75rem; margin-bottom: 10px; }
+        .team-desc { padding: 0 20px; font-size: 0.8rem; line-height: 1.4; }
+        
+        /* 动画类 (通用) */
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .reveal-1 { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; animation-delay: 0.1s; }
         .reveal-2 { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; animation-delay: 0.3s; }
         .reveal-3 { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; animation-delay: 0.5s; }
         .reveal-4 { animation: fadeIn 1.2s ease-out forwards; opacity: 0; animation-delay: 0.8s; }
-
+        
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
         .scroll-down { text-align: center; margin-top: 50px; cursor: pointer; animation: bounce 2s infinite; opacity: 0.7; }
-        
-        /* --- 团队卡片样式 (3x2 矩阵版) --- */
-        .team-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-            padding: 40px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        @media (max-width: 900px) { .team-container { grid-template-columns: 1fr; } }
-
-        .team-card {
-            width: 100%; height: 360px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            position: relative;
-            transition: all 0.4s ease;
-            text-align: center;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .team-card:hover {
-            transform: translateY(-10px);
-            border-color: #00f2ff;
-            background: rgba(0, 242, 255, 0.05);
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
-        }
-
-        .avatar-box {
-            width: 100px; height: 100px;
-            border-radius: 50%;
-            margin: 40px auto 20px;
-            border: 3px solid rgba(255,255,255,0.2);
-            background: linear-gradient(135deg, #00c6ff, #0072ff);
-            color: white;
-            font-family: 'Noto Sans SC', sans-serif;
-            font-size: 45px;
-            font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.4s ease;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-        .team-card:hover .avatar-box {
-            border-color: #00ff88;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-            transform: rotate(10deg) scale(1.1);
-        }
-        .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-
-        .team-name { font-family: 'Orbitron', 'Noto Sans SC'; font-size: 1.4rem; color: white; margin-bottom: 5px; font-weight: bold; }
-        .team-role { color: #00f2ff; font-size: 0.85rem; margin-bottom: 10px; letter-spacing: 1px; }
-        .team-id { color: #666; font-size: 0.75rem; margin-bottom: 10px; }
-        .team-desc { padding: 0 20px; color: #ccc; font-size: 0.8rem; line-height: 1.4; }
         
         .gray-card { filter: grayscale(100%); opacity: 0.6; }
         .gray-card:hover { filter: grayscale(0%); opacity: 1; }
@@ -560,3 +605,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
