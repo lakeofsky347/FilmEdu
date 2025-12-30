@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import time
 import requests
 import os
@@ -19,7 +19,8 @@ from qwenclient import generate_image_sync
 # 🛠️ 基础工具与配置
 # ==========================================
 UPLOAD_DIR = "student_uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def save_uploaded_file(uploaded_file, user_id, task_id):
     if uploaded_file is None: return None
@@ -31,7 +32,7 @@ def save_uploaded_file(uploaded_file, user_id, task_id):
     return file_path
 
 # ==========================================
-# 🌌 核心资源加载 (纯本地绝对路径版)
+# 🌌 核心资源加载
 # ==========================================
 def load_lottie_local(filename: str):
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -39,7 +40,7 @@ def load_lottie_local(filename: str):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except:
         return None
 
 def render_lottie(filename, height=300, key=None):
@@ -54,13 +55,9 @@ def render_lottie(filename, height=300, key=None):
         [ {filename.upper()} ]
         </div>""", unsafe_allow_html=True)
 
-# 资源列表
 lottie_assets = {
-    "robot": "robot.json",
-    "empty": "empty.json", 
-    "success": "success.json",
-    "welcome": "welcome.json",
-    "files": "files.json"
+    "robot": "robot.json", "empty": "empty.json", 
+    "success": "success.json", "welcome": "welcome.json", "files": "files.json"
 }
 
 def render_particles():
@@ -87,153 +84,115 @@ def inject_custom_css():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
         
-        /* === 全局基础设置 === */
-        .stApp { font-family: 'Noto Sans SC', sans-serif; transition: background-color 0.5s ease; }
-        
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #0e1117; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
 
-        /* =========================================
-           🌙 DARK MODE (默认 / 赛博朋克)
-           ========================================= */
-        @media (prefers-color-scheme: dark) {
-            .stApp {
-                background-color: #0e1117;
-            }
-            h1, h2, h3 {
-                font-family: 'Orbitron', sans-serif !important;
-                background: linear-gradient(120deg, #E0F7FA, #00f2ff);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
-            }
-            .team-card, div[data-testid="stMetric"], .glass-card, div.stForm {
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            }
-            .team-card:hover {
-                border-color: #00f2ff;
-                background: rgba(0, 242, 255, 0.05);
-                box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
-            }
-            .system-bar { color: rgba(0, 242, 255, 0.8); }
-            ::-webkit-scrollbar-track { background: #0e1117; }
-            ::-webkit-scrollbar-thumb { background: #333; }
-            ::-webkit-scrollbar-thumb:hover { background: #00f2ff; }
-            
-            /* 粒子背景 (暗色) */
-            #particles-js { opacity: 1; }
+        .stApp { font-family: 'Noto Sans SC', sans-serif; }
+        
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif !important;
+            background: linear-gradient(120deg, #E0F7FA, #00f2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
         }
 
-        /* =========================================
-           ☀️ LIGHT MODE (工业设计 / 极简)
-           ========================================= */
-        @media (prefers-color-scheme: light) {
-            .stApp {
-                background-color: #f0f2f6; /* 工业浅灰 */
-            }
-            
-            /* 标题：深邃的工业蓝 */
-            h1, h2, h3 {
-                font-family: 'Orbitron', sans-serif !important;
-                background: linear-gradient(120deg, #004e92, #000428);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                filter: none; /* 去除发光，保持锐利 */
-            }
-            
-            /* 卡片：纯白实体 + 投影 */
-            .team-card, div[data-testid="stMetric"], .glass-card, div.stForm {
-                background: #ffffff;
-                border: 1px solid #e0e0e0;
-                border-radius: 16px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* 柔和阴影 */
-                color: #31333F;
-            }
-            
-            .team-card:hover {
-                transform: translateY(-8px);
-                border-color: #0056d2;
-                box-shadow: 0 12px 24px rgba(0, 86, 210, 0.15); /* 蓝色投影 */
-            }
-            
-            /* 团队卡片文字适配 */
-            .team-name { color: #1f1f1f !important; }
-            .team-role { color: #0056d2 !important; font-weight: 700; }
-            .team-id { color: #666 !important; }
-            .team-desc { color: #555 !important; }
-            
-            /* 头像框 */
-            .avatar-box {
-                border: 3px solid #f0f2f6; /* 与背景同色 */
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            }
-            
-            /* 系统栏 */
-            .system-bar { 
-                color: #0056d2; 
-                background: rgba(255,255,255,0.8);
-                backdrop-filter: blur(5px);
-                border-bottom-left-radius: 10px;
-            }
-            
-            /* 滚动条 */
-            ::-webkit-scrollbar-track { background: #f0f2f6; }
-            ::-webkit-scrollbar-thumb { background: #ccc; }
-            ::-webkit-scrollbar-thumb:hover { background: #0056d2; }
-            
-            /* 隐藏原来的暗色粒子背景，JS会画新的 */
-            #bg-gradient { display: none; }
+        div[data-testid="stMetric"], .glass-card, div.stForm {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        div[data-testid="stMetric"]:hover, .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 242, 255, 0.5);
+            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.15);
         }
 
-        /* --- 通用布局 --- */
         .system-bar {
             position: fixed; top: 0; right: 0; padding: 10px 20px;
-            font-family: 'Orbitron'; font-size: 0.75rem; z-index: 9999; letter-spacing: 1px;
+            color: rgba(0, 242, 255, 0.8); font-family: 'Orbitron'; font-size: 0.75rem;
+            z-index: 9999; letter-spacing: 1px;
         }
         
-        .team-container {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
-            padding: 40px 20px; max-width: 1200px; margin: 0 auto;
-        }
-        @media (max-width: 900px) { .team-container { grid-template-columns: 1fr; } }
-
-        .team-card {
-            width: 100%; height: 360px;
-            position: relative; transition: all 0.4s ease;
-            text-align: center; display: flex; flex-direction: column; align-items: center;
-        }
-
-        .avatar-box {
-            width: 100px; height: 100px; border-radius: 50%;
-            margin: 40px auto 20px;
-            background: linear-gradient(135deg, #00c6ff, #0072ff);
-            color: white; font-family: 'Noto Sans SC', sans-serif;
-            font-size: 45px; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.4s ease;
+        .class-code-badge {
+            font-family: 'Orbitron'; font-size: 1.5rem; color: #00ff88; letter-spacing: 2px;
+            background: rgba(0, 255, 136, 0.1); padding: 10px 20px; border-radius: 8px; border: 1px dashed #00ff88;
         }
         
-        .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .team-name { font-family: 'Orbitron', 'Noto Sans SC'; font-size: 1.4rem; margin-bottom: 5px; font-weight: bold; }
-        .team-role { font-size: 0.85rem; margin-bottom: 10px; letter-spacing: 1px; }
-        .team-id { font-size: 0.75rem; margin-bottom: 10px; }
-        .team-desc { padding: 0 20px; font-size: 0.8rem; line-height: 1.4; }
-        
-        /* 动画类 (通用) */
+        /* 动画类 */
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .reveal-1 { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; animation-delay: 0.1s; }
         .reveal-2 { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; animation-delay: 0.3s; }
         .reveal-3 { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; animation-delay: 0.5s; }
         .reveal-4 { animation: fadeIn 1.2s ease-out forwards; opacity: 0; animation-delay: 0.8s; }
-        
+
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
         .scroll-down { text-align: center; margin-top: 50px; cursor: pointer; animation: bounce 2s infinite; opacity: 0.7; }
         
-        .gray-card { filter: grayscale(100%); opacity: 0.6; }
-        .gray-card:hover { filter: grayscale(0%); opacity: 1; }
+        /* --- 团队卡片样式 (3x2 矩阵) --- */
+        .team-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        @media (max-width: 900px) { .team-container { grid-template-columns: 1fr; } }
+
+        .team-card {
+            width: 100%; height: 360px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            transition: all 0.4s ease;
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .team-card:hover {
+            transform: translateY(-10px);
+            border-color: #00f2ff;
+            background: rgba(0, 242, 255, 0.05);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+        }
+
+        /* 姓氏头像样式 */
+        .avatar-box {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            margin: 40px auto 20px;
+            border: 3px solid rgba(255,255,255,0.2);
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 45px;
+            font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            overflow: hidden; /* ✅ 关键：防止方形图片溢出圆角 */
+        }
+        .team-card:hover .avatar-box {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+            transform: rotate(10deg) scale(1.1);
+        }
+        .avatar-img { 
+            width: 100%; height: 100%; 
+            object-fit: cover; /* ✅ 保证图片不变形填满圆形 */
+        }
+
+        .team-name { font-family: 'Orbitron', 'Noto Sans SC'; font-size: 1.4rem; color: white; margin-bottom: 5px; font-weight: bold; }
+        .team-role { color: #00f2ff; font-size: 0.85rem; margin-bottom: 10px; letter-spacing: 1px; }
+        .team-id { color: #666; font-size: 0.75rem; margin-bottom: 10px; }
+        .team-desc { padding: 0 20px; color: #ccc; font-size: 0.8rem; line-height: 1.4; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -274,7 +233,7 @@ def landing_page():
         with c1:
             st.markdown("""
             <div class='reveal-1'>
-                <h1 style='font-size: 3.5rem; margin-bottom: 0;'>FilmEdu OS <span style='font-size:1.5rem; color:#00ff88'>Ultimate</span></h1>
+                <h1 style='font-size: 3.5rem; margin-bottom: 0;'>FilmEdu OS <span style='font-size:1.5rem; color:#00ff88'>v8.0</span></h1>
                 <h3 style='font-weight: 300; color: #ccc; margin-top: 0;'>The Next-Gen Cinema Education Platform</h3>
             </div>
             <div class='reveal-2' style='margin: 30px 0; border-left: 4px solid #00f2ff; padding-left: 20px;'>
@@ -317,18 +276,8 @@ def landing_page():
             cuc_particle_effect()
             st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class='reveal-4 scroll-down' onclick="window.scrollTo(0, document.body.scrollHeight);">
-        <p style='color: #00f2ff; font-size: 0.8rem; letter-spacing: 2px;'>SCROLL TO MEET THE TEAM</p>
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00f2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
-        </svg>
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.markdown("""<div class='reveal-4 scroll-down' onclick="window.scrollTo(0, document.body.scrollHeight);"><p style='color: #00f2ff; font-size: 0.8rem; letter-spacing: 2px;'>SCROLL TO MEET THE TEAM</p><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00f2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg></div>""", unsafe_allow_html=True)
     st.markdown("<div style='height: 25vh;'></div>", unsafe_allow_html=True)
-
-    # --- 团队展示 ---
     st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin: 50px 0;'>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: center; margin-bottom: 50px;'>ARCHITECTS OF THE SYSTEM</h2>", unsafe_allow_html=True)
 
@@ -336,54 +285,61 @@ def landing_page():
 <div class="team-container">
     <!-- 1. 陈虹宇 -->
     <div class="team-card">
-        <div class="avatar-box">
-                <img src="https://github.com/lakeofsky347/FilmEdu/blob/main/heads/chen.jpg" class="avatar-img">
-            </div>
+        <!-- 🖼️ 图片模式：将下行取消注释，填入 src (例如: https://github.com/xx.jpg) -->
+        <!-- <div class="avatar-box"><img src="YOUR_IMG_URL" class="avatar-img"></div> -->
+        
+        <!-- 🔤 文字模式：如果启用图片，请将下行注释掉 -->
+        <div class="avatar-box">陈</div>
+        
         <div class="team-name">陈虹宇</div>
         <div class="team-role">Lead Architect & UI Designer</div>
         <div class="team-id">ID: 202413093053</div>
         <div class="team-desc">项目总负责人。<br>负责核心程序设计、AI 接口集成及全站 UI/UX 动效实现。</div>
     </div>
-<!-- 2. 纪坤江 -->
+
+    <!-- 2. 纪坤江 -->
     <div class="team-card">
-        <div class="avatar-box">
-                <img src="https://github.com/lakeofsky347/FilmEdu/blob/main/heads/ji.jpg" class="avatar-img">
-            </div>
+        <!-- <div class="avatar-box"><img src="YOUR_IMG_URL" class="avatar-img"></div> -->
+        <div class="avatar-box">纪</div>
         <div class="team-name">纪坤江</div>
         <div class="team-role">Backend Developer</div>
         <div class="team-id">ID: 202413093052</div>
         <div class="team-desc">后端逻辑与结构优化。<br>负责数据库架构设计及功能模块的底层实现。</div>
     </div>
-<!-- 3. 马行键 -->
+
+    <!-- 3. 马行键 -->
     <div class="team-card">
-        <div class="avatar-box">
-                <img src="https://github.com/lakeofsky347/FilmEdu/blob/main/heads/ma.jpg" class="avatar-img">
-            </div>
+        <!-- <div class="avatar-box"><img src="YOUR_IMG_URL" class="avatar-img"></div> -->
+        <div class="avatar-box">马</div>
         <div class="team-name">马行键</div>
         <div class="team-role">QA Engineer</div>
         <div class="team-id">ID: 202413093062</div>
         <div class="team-desc">集成测试专家。<br>负责系统功能测试、Bug 追踪及用户体验反馈。</div>
     </div>
-<!-- 4. 唐艺玲 (暖色调区分) -->
+
+    <!-- 4. 唐艺玲 (暖色调区分) -->
     <div class="team-card">
-        <div class="avatar-box">
-                <img src="https://github.com/lakeofsky347/FilmEdu/blob/main/heads/tang.jpg" class="avatar-img">
-            </div>
+        <!-- <div class="avatar-box"><img src="YOUR_IMG_URL" class="avatar-img"></div> -->
+        <div class="avatar-box" style="background: linear-gradient(135deg, #ff9966, #ff5e62);">唐</div>
         <div class="team-name">唐艺玲</div>
         <div class="team-role">Technical Writer</div>
-        <div class="team-id">ID: 202328043016</div>
+        <div class="team-id">ID: 20241303016</div>
         <div class="team-desc">文档与报告撰写。<br>负责项目书面材料整理及技术文档的规范化输出。</div>
     </div>
-<!-- 5. 李祈芸 (暖色调区分) -->
+
+    <!-- 5. 李祈芸 (暖色调区分) -->
     <div class="team-card">
+        <!-- <div class="avatar-box"><img src="YOUR_IMG_URL" class="avatar-img"></div> -->
         <div class="avatar-box" style="background: linear-gradient(135deg, #ff9966, #ff5e62);">李</div>
         <div class="team-name">李祈芸</div>
         <div class="team-role">Project Manager</div>
         <div class="team-id">ID: 202413093059</div>
         <div class="team-desc">项目进度管理。<br>负责材料统筹整理及团队协作进度的推进。</div>
     </div>
-<!-- 6. 吴起帆 -->
+
+    <!-- 6. 吴起帆 (统一样式) -->
     <div class="team-card">
+        <!-- <div class="avatar-box"><img src="YOUR_IMG_URL" class="avatar-img"></div> -->
         <div class="avatar-box">吴</div>
         <div class="team-name">吴起帆</div>
         <div class="team-role">Code</div>
@@ -400,78 +356,146 @@ def landing_page():
 # ==========================================
 def teacher_dashboard():
     user = st.session_state.user_info['username']
-    my_tasks = st.session_state.db.get_teacher_tasks(user)
-    task_count = len(my_tasks)
     
-    submission_count = 0
-    graded_count = 0
-    for t in my_tasks:
-        subs = st.session_state.db.get_submissions(t[0])
-        submission_count += len(subs)
-        # status index is 8 due to new file_path col
-        graded_count += len([s for s in subs if s[8] == 'graded'])
-
+    # 侧边栏导航
     with st.sidebar:
         st.markdown(f"### 🟢 COMMANDER: {user}")
-        nav = option_menu(None, ["概览", "任务发布", "作业批阅", "断开连接"], 
-            icons=["grid", "broadcast", "check2-square", "power"])
+        nav = option_menu(None, ["概览", "班级管理", "任务发布", "作业批阅", "断开连接"], 
+            icons=["grid", "people", "broadcast", "check2-square", "power"])
         if nav == "断开连接": st.session_state.logged_in=False; st.rerun()
 
     if nav == "概览":
+        my_tasks = st.session_state.db.get_teacher_tasks(user)
+        my_classes = st.session_state.db.get_teacher_classes(user)
+        
         st.title("🎛️ 教学数据看板")
         c1, c2, c3 = st.columns(3)
-        c1.metric("已发布任务", str(task_count))
-        c2.metric("收到提交", str(submission_count))
-        c3.metric("已批阅", str(graded_count))
+        c1.metric("管理班级", str(len(my_classes)))
+        c2.metric("已发布任务", str(len(my_tasks)))
+        
+        # 计算总提交
+        total_sub = 0
+        for t in my_tasks:
+            total_sub += len(st.session_state.db.get_submissions(t[0]))
+        c3.metric("收到提交", str(total_sub))
+        
         st.markdown("---")
-        if task_count == 0:
-            c_empty, _ = st.columns([1, 2])
-            with c_empty:
-                st.info("当前系统空闲。")
-                render_lottie("empty.json", height=200, key="empty")
+        if len(my_classes) == 0:
+            st.info("👋 欢迎！请先前往【班级管理】创建一个新班级。")
+            render_lottie("welcome.json", height=300, key="welcome_teach")
         else:
-            st.subheader("📋 活跃任务流")
-            for t in my_tasks[-3:]: 
+            st.subheader("📊 活跃班级")
+            for cls in my_classes:
                 with st.container():
-                    st.markdown(f"**{t[2]}**")
-                    st.caption(f"发布时间: {t[4]}")
-                    st.progress(100, "状态: 进行中")
+                    st.markdown(f"**{cls[2]}** (Code: `{cls[3]}`)")
+                    st.progress(100, f"创建于: {cls[4]}")
+
+    elif nav == "班级管理":
+        st.title("🏫 班级控制中心")
+        
+        tab1, tab2 = st.tabs(["创建新班级", "申请审核"])
+        
+        with tab1:
+            with st.form("create_class"):
+                c_name = st.text_input("班级名称 (例如: 2024级导演系)")
+                if st.form_submit_button("创建班级"):
+                    code = st.session_state.db.create_class(user, c_name)
+                    st.success(f"班级创建成功！邀请码为: {code}")
+                    time.sleep(2)
+                    st.rerun()
+            
+            st.markdown("### 📋 我的班级列表")
+            classes = st.session_state.db.get_teacher_classes(user)
+            if classes:
+                for c in classes:
+                    st.markdown(f"""
+                    <div style='background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:10px; border-left: 4px solid #00f2ff;'>
+                        <span style='font-size:1.2rem; font-weight:bold;'>{c[2]}</span>
+                        <span class='class-code-badge' style='float:right;'>{c[3]}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("暂无班级。")
+
+        with tab2:
+            st.subheader("🔔 待审核申请")
+            pendings = st.session_state.db.get_pending_applications(user)
+            if pendings:
+                for p in pendings:
+                    c1, c2, c3 = st.columns([2, 2, 1])
+                    c1.write(f"学生: **{p[1]}**")
+                    c2.write(f"申请加入: **{p[2]}**")
+                    if c3.button("通过 ✅", key=f"app_{p[0]}"):
+                        st.session_state.db.approve_application(p[0])
+                        st.toast(f"已批准 {p[1]} 加入班级")
+                        time.sleep(1)
+                        st.rerun()
+            else:
+                st.info("暂无待处理的申请。")
+                render_lottie("success.json", height=200, key="all_clear")
 
     elif nav == "任务发布":
-        st.title("📡 新任务广播")
+        st.title("📡 任务广播站")
+        
+        my_classes = st.session_state.db.get_teacher_classes(user)
+        if not my_classes:
+            st.warning("请先创建班级！")
+            return
+
         c1, c2 = st.columns([2, 1])
         with c1:
             with st.form("pub_task"):
+                class_names = [f"{c[2]} ({c[3]})" for c in my_classes]
+                selected_class_str = st.selectbox("发布给哪个班级？", class_names)
+                selected_code = selected_class_str.split('(')[1].replace(')', '')
+                class_id = next(c[0] for c in my_classes if c[3] == selected_code)
+
                 title = st.text_input("任务代号")
                 content = st.text_area("任务指令详情", height=200)
+                
                 if st.form_submit_button("🚀 发布任务"):
-                    success = st.session_state.db.create_task(user, title, content)
+                    success = st.session_state.db.create_task(user, class_id, title, content)
                     if success:
                         st.balloons()
-                        st.toast("任务已同步")
+                        st.toast(f"任务已同步至 [{selected_class_str}]")
                         time.sleep(1)
                         st.rerun()
-                    else: st.error("⚠️ 错误：该任务代号已存在！")
-        with c2: st.info("💡 提示: 任务代号必须唯一。")
+                    else:
+                        st.error("该班级下已存在同名任务！")
+        with c2:
+            st.info("💡 提示: 任务将只对选定班级的学生可见。")
 
     elif nav == "作业批阅":
         st.title("📝 作业评估终端")
-        if not my_tasks: st.warning("请先发布任务。"); return
-        t_titles = [t[2] for t in my_tasks]
-        sel_t = st.selectbox("选择任务频道", t_titles)
-        t_id = next(t[0] for t in my_tasks if t[2] == sel_t)
-        t_content = next(t[3] for t in my_tasks if t[2] == sel_t)
-        subs = st.session_state.db.get_submissions(t_id)
+        
+        my_classes = st.session_state.db.get_teacher_classes(user)
+        if not my_classes: st.warning("请先创建班级。"); return
+        
+        c_names = [c[2] for c in my_classes]
+        sel_c_name = st.selectbox("📂 选择班级", c_names)
+        sel_c_id = next(c[0] for c in my_classes if c[2] == sel_c_name)
+        
+        tasks = st.session_state.db.get_tasks_by_class(sel_c_id)
+        if not tasks:
+            st.info("该班级暂无任务。")
+            render_lottie("empty.json", height=200, key="no_task")
+            return
+
+        t_titles = [t[3] for t in tasks]
+        sel_t_title = st.selectbox("📄 选择任务", t_titles)
+        sel_t = next(t for t in tasks if t[3] == sel_t_title)
+        
+        subs = st.session_state.db.get_submissions(sel_t[0])
         
         if not subs:
             st.info("暂无信号。")
-            render_lottie("empty.json", height=200, key="empty_sub")
         else:
             if st.button("📊 运行 AI 学情分析"):
                 with st.spinner("Analyzing..."):
                     all_text = "\n".join([f"学生{s[2]}: {s[3]}" for s in subs])
-                    report = AIService.teacher_summary(t_content, all_text)
+                    report = AIService.teacher_summary(sel_t[4], all_text)
                     st.success(report)
+            
             st.divider()
             for s in subs:
                 status_icon = "✅" if s[8] == 'graded' else "⏳"
@@ -501,31 +525,66 @@ def teacher_dashboard():
 # ==========================================
 def student_dashboard():
     user = st.session_state.user_info['username']
-    nav = option_menu(None, ["工作台", "个人档案", "退出"], 
-        icons=["pc-display", "person-vcard", "power"], orientation="horizontal",
+    nav = option_menu(None, ["班级大厅", "工作台", "个人档案", "退出"], 
+        icons=["building", "pc-display", "person-vcard", "power"], orientation="horizontal",
         styles={"container": {"background-color": "transparent"}})
     if nav == "退出": st.session_state.logged_in=False; st.rerun()
 
-    if nav == "工作台":
-        all_tasks = st.session_state.db.get_all_tasks()
-        if not all_tasks: st.info("系统待机中。"); render_lottie("files.json", height=300, key="idle"); return
+    if nav == "班级大厅":
+        st.title("🏛️ 班级接入中心")
+        c1, c2 = st.columns([1, 1.5])
+        with c1:
+            st.subheader("加入新班级")
+            with st.form("join_class"):
+                code_input = st.text_input("请输入6位班级邀请码")
+                if st.form_submit_button("申请加入"):
+                    cls = st.session_state.db.get_class_by_code(code_input)
+                    if cls:
+                        res = st.session_state.db.join_class(user, cls[0])
+                        if res: st.success("申请已发送，等待导师批准。")
+                        else: st.warning("您已提交过申请或已在班级中。")
+                    else: st.error("无效的邀请码。")
+        with c2:
+            st.subheader("我的班级列表")
+            my_classes = st.session_state.db.get_student_classes(user)
+            if my_classes:
+                for mc in my_classes:
+                    status_color = "#00ff88" if mc[5] == "approved" else "#ffcc00"
+                    status_text = "已加入" if mc[5] == "approved" else "审核中"
+                    st.markdown(f"""<div style='background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:10px; border-left: 4px solid {status_color};'><span style='font-size:1.1rem; font-weight:bold;'>{mc[2]}</span><span style='float:right; color:{status_color};'>{status_text}</span></div>""", unsafe_allow_html=True)
+            else:
+                st.info("您尚未加入任何班级。")
+                render_lottie("robot.json", height=200, key="no_class")
+
+    elif nav == "工作台":
+        all_tasks = st.session_state.db.get_student_tasks(user)
+        if not all_tasks: 
+            st.info("工作台空闲。请先加入班级或等待老师发布任务。")
+            render_lottie("files.json", height=300, key="idle")
+            return
         c_list, c_detail = st.columns([1, 2.5])
         with c_list:
             st.subheader("📥 任务收件箱")
             for t in all_tasks:
-                if st.button(f"📄 {t[2]}", key=f"sel_{t[0]}", use_container_width=True): st.session_state['curr_t_id'] = t[0]
+                if st.button(f"[{t[6]}]\n{t[3]}", key=f"sel_{t[0]}", use_container_width=True): st.session_state['curr_t_id'] = t[0]
             if 'curr_t_id' not in st.session_state: st.session_state['curr_t_id'] = all_tasks[0][0]
+
         curr_t = next((t for t in all_tasks if t[0] == st.session_state['curr_t_id']), None)
         if curr_t:
             my_sub = st.session_state.db.get_my_submission(curr_t[0], user)
             with c_detail:
-                st.markdown(f"### 🚩 {curr_t[2]}"); st.info(f"指令: {curr_t[3]}")
+                st.markdown(f"### 🚩 {curr_t[3]}")
+                st.caption(f"来源: {curr_t[6]} | 发布于: {curr_t[5]}")
+                st.info(f"指令: {curr_t[4]}")
+                
                 tab_main, tab_ai = st.tabs(["✍️ 创作终端", "🔮 AI 辅助"])
                 with tab_main:
                     val = my_sub[3] if my_sub else ""
                     u_input = st.text_area("内容输入...", value=val, height=200, placeholder="剧本概述...")
                     st.markdown("##### 📎 附件上传")
                     uploaded_file = st.file_uploader("拖拽文件", type=['png', 'jpg', 'mp4', 'pdf'])
+                    if my_sub and my_sub[4]: st.caption(f"当前已存: {os.path.basename(my_sub[4])}")
+
                     if st.button("📡 提交作业", type="primary"):
                         file_path = None
                         if uploaded_file: file_path = save_uploaded_file(uploaded_file, user, curr_t[0])
@@ -533,48 +592,37 @@ def student_dashboard():
                         fb = st.session_state.get(f"fb_{curr_t[0]}", my_sub[5] if my_sub else "")
                         st.session_state.db.submit_work(curr_t[0], user, u_input, file_path, fb)
                         render_lottie("success.json", height=100, key="ok"); st.success("数据传输完成！")
+                
                 with tab_ai:
                     c_a1, c_a2 = st.columns(2)
                     with c_a1:
-                        # 1. 允许学生输入自己的画面描述
                         st.markdown("#### 🎨 视觉化实验室")
-                        img_prompt = st.text_area("分镜画面描述", height=100, 
-                                                placeholder="在此输入画面构思...\n例如：清晨的森林，阳光透过树叶，丁达尔效应，电影质感",
-                                                key=f"img_p_{curr_t[0]}")
-                        
-                        # 2. 风格选择器
+                        img_prompt = st.text_area("分镜画面描述", height=100, placeholder="画面构思...", key=f"img_p_{curr_t[0]}")
                         img_style = st.selectbox("风格滤镜", ["无 (Custom)", "电影写实 (Cinematic)", "赛博朋克 (Cyberpunk)", "水墨国风 (Ink)", "皮克斯动画 (3D Cartoon)"], key=f"style_{curr_t[0]}")
 
                         if st.button("✨ 生成分镜图", use_container_width=True, key=f"gen_btn_{curr_t[0]}"):
-                            if not img_prompt:
-                                st.warning("请先输入画面描述。")
+                            if not img_prompt: st.warning("请先输入画面描述。")
                             else:
                                 with st.spinner("通义万相正在绘图..."):
-                                    # 组合 Prompt
                                     style_tag = ""
                                     if "电影写实" in img_style: style_tag = ", cinematic shot, photorealistic, 8k"
                                     elif "赛博朋克" in img_style: style_tag = ", cyberpunk, neon lights, futuristic"
                                     elif "水墨" in img_style: style_tag = ", chinese ink painting style, artistic"
                                     elif "皮克斯" in img_style: style_tag = ", 3d style, pixar, cute, vibrant"
-                                    
                                     final_prompt = f"{img_prompt}{style_tag}"
-                                    
                                     res = generate_image_sync(QWEN_API_KEY, final_prompt)
-                                    if res['success']:
-                                        st.image(res['paths'][0], caption=f"Prompt: {img_prompt}", use_container_width=True)
-                                    else:
-                                        st.error(f"生成失败: {res.get('message')}")
+                                    if res['success']: st.image(res['paths'][0], caption=f"Prompt: {img_prompt}", use_container_width=True)
+                                    else: st.error(f"生成失败: {res.get('message')}")
 
                     with c_a2:
                         if st.button("🤖 智能预审"):
                             if u_input:
                                 with st.spinner("DeepSeek Scanning..."):
-                                    res = AIService.student_pre_review(curr_t[3], u_input)
+                                    res = AIService.student_pre_review(curr_t[4], u_input)
                                     st.session_state[f"fb_{curr_t[0]}"] = res
                             else: st.warning("请先输入文本。")
-                        
-                        fb_display = st.session_state.get(f"fb_{curr_t[0]}", my_sub[5] if my_sub else None)
-                        if fb_display: st.info(f"AI反馈: {fb_display}")
+                    fb_display = st.session_state.get(f"fb_{curr_t[0]}", my_sub[5] if my_sub else None)
+                    if fb_display: st.info(f"AI反馈: {fb_display}")
 
     elif nav == "个人档案":
         c1, c2 = st.columns([1, 2])
@@ -583,13 +631,16 @@ def student_dashboard():
             st.metric("Access ID", user); st.metric("Role", "Student Unit")
         with c2:
             st.subheader("能力矩阵")
-            recent_score = None
-            all_tasks = st.session_state.db.get_all_tasks()
+            total_score = 0; count = 0
+            all_tasks = st.session_state.db.get_student_tasks(user)
             for t in all_tasks:
                 s = st.session_state.db.get_my_submission(t[0], user)
-                if s and s[6]: recent_score = s[6]; break
-            render_radar_chart(recent_score)
-            if not recent_score: st.caption("完成作业以激活数据。")
+                if s and s[6]:
+                    try: total_score += float(s[6]); count += 1
+                    except: pass
+            avg_score = total_score / count if count > 0 else 0
+            render_radar_chart(avg_score if count > 0 else None)
+            if count == 0: st.caption("完成作业以激活数据。")
 
 # ==========================================
 # 🚀 启动器
@@ -603,6 +654,4 @@ def main():
     else: landing_page()
 
 if __name__ == "__main__":
-
     main()
-
